@@ -27,7 +27,7 @@ export const Route = createFileRoute("/nova-senha")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: NovaSenhaPage;
+  component: NovaSenhaPage,
 });
 
 type Status = "checking" | "ready" | "invalid";
