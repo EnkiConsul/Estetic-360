@@ -23,9 +23,9 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
   component: ConfiguracoesPage,
 });
 
-function formatCurrency(cents: number | null) {
-  if (cents == null) return "—";
-  return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+function formatCurrency(value: number | null) {
+  if (value == null) return "—";
+  return Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 function ConfiguracoesPage() {
@@ -200,7 +200,7 @@ function ConfiguracoesPage() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{procedure.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {formatCurrency(procedure.price_cents)}
+                    {formatCurrency(procedure.default_price)}
                     {procedure.duration_minutes ? ` · ${procedure.duration_minutes} min` : ""}
                   </p>
                 </div>
