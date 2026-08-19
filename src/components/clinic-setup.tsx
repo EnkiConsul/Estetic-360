@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { clinicContextKey } from "@/hooks/use-clinic-context";
-import { bootstrapClinic } from "@/lib/clinic-data";
+import { createClinicWithAdmin } from "@/lib/clinic-data";
 
 export function ClinicSetup({ defaultName }: { defaultName?: string }) {
   const [clinicName, setClinicName] = useState("");
@@ -16,10 +16,10 @@ export function ClinicSetup({ defaultName }: { defaultName?: string }) {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: () => bootstrapClinic(clinicName.trim(), fullName.trim()),
+    mutationFn: () => createClinicWithAdmin(clinicName.trim(), fullName.trim()),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: clinicContextKey });
-      toast.success("Clínica criada! Já deixamos alguns exemplos para você explorar.");
+      toast.success("Clínica criada. Bem-vindo ao Estetic360º!");
     },
     onError: () => toast.error("Não foi possível criar a clínica. Tente novamente."),
   });
