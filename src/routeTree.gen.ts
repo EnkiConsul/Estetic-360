@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as NovaSenhaRouteImport } from './routes/nova-senha'
+import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAtendimentosRouteImport } from './routes/_authenticated/atendimentos'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
@@ -33,6 +35,16 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NovaSenhaRoute = NovaSenhaRouteImport.update({
+  id: '/nova-senha',
+  path: '/nova-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
+  id: '/recuperar-senha',
+  path: '/recuperar-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
@@ -81,6 +93,8 @@ const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/nova-senha': typeof NovaSenhaRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/atendimentos': typeof AuthenticatedAtendimentosRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -93,6 +107,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/nova-senha': typeof NovaSenhaRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/atendimentos': typeof AuthenticatedAtendimentosRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -107,6 +123,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/nova-senha': typeof NovaSenhaRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/atendimentos': typeof AuthenticatedAtendimentosRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -121,6 +139,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/nova-senha'
+    | '/recuperar-senha'
     | '/agenda'
     | '/atendimentos'
     | '/configuracoes'
@@ -133,6 +153,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/nova-senha'
+    | '/recuperar-senha'
     | '/agenda'
     | '/atendimentos'
     | '/configuracoes'
@@ -146,6 +168,8 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/nova-senha'
+    | '/recuperar-senha'
     | '/_authenticated/agenda'
     | '/_authenticated/atendimentos'
     | '/_authenticated/configuracoes'
@@ -160,6 +184,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  NovaSenhaRoute: typeof NovaSenhaRoute
+  RecuperarSenhaRoute: typeof RecuperarSenhaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -183,6 +209,20 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nova-senha': {
+      id: '/nova-senha'
+      path: '/nova-senha'
+      fullPath: '/nova-senha'
+      preLoaderRoute: typeof NovaSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recuperar-senha': {
+      id: '/recuperar-senha'
+      path: '/recuperar-senha'
+      fullPath: '/recuperar-senha'
+      preLoaderRoute: typeof RecuperarSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/agenda': {
@@ -273,6 +313,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  NovaSenhaRoute: NovaSenhaRoute,
+  RecuperarSenhaRoute: RecuperarSenhaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
