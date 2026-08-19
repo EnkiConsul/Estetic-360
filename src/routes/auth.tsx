@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -45,6 +45,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => {
@@ -65,7 +66,7 @@ function AuthPage() {
 
   const signUp = async () => {
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
@@ -78,6 +79,14 @@ function AuthPage() {
       toast.error(friendlyError(error.message));
       return;
     }
+
+    // Quando a confirmação de e-mail está exigida, não existe sessão aqui.
+    if (!data.session) {
+      setNeedsConfirmation(true);
+      toast.success("Confirme seu e-mail para ativar a conta.");
+      return;
+    }
+
     toast.success("Conta criada! Vamos configurar sua clínica.");
     navigate({ to: "/inicio" });
   };
@@ -95,7 +104,9 @@ function AuthPage() {
         <Card>
           <CardHeader>
             <CardTitle>Acesse sua clínica</CardTitle>
-            <CardDescription>Use seu e-mail e senha para entrar ou criar sua conta.</CardDescription>
+            <CardDescription>
+              Use seu e-mail e senha para entrar ou criar sua conta.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="entrar">
@@ -137,55 +148,68 @@ function AuthPage() {
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Entrando..." : "Entrar"}
                   </Button>
+                  <Button variant="link" className="w-full" asChild>
+                    <Link to="/recuperar-senha">Esqueci minha senha</Link>
+                  </Button>
                 </form>
               </TabsContent>
 
               <TabsContent value="criar" className="mt-4">
-                <form
-                  className="space-y-4"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    void signUp();
-                  }}
-                >
-                  <div className="space-y-2">
-                    <Label htmlFor="nome-criar">Seu nome</Label>
-                    <Input
-                      id="nome-criar"
-                      value={fullName}
-                      onChange={(event) => setFullName(event.target.value)}
-                      autoComplete="name"
-                      placeholder="Ex.: Dra. Camila Ribeiro"
-                    />
+                {needsConfirmation ? (
+                  <div className="space-y-3 py-2">
+                    <p className="text-sm font-medium">Verifique seu e-mail</p>
+                    <p className="text-sm text-muted-foreground">
+                      Enviamos um link de confirmação para {email.trim()}. Depois de confirmar,
+                      volte aqui e entre com seu e-mail e senha.
+                    </p>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email-criar">E-mail</Label>
-                    <Input
-                      id="email-criar"
-                      type="email"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                      autoComplete="email"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="senha-criar">Senha</Label>
-                    <Input
-                      id="senha-criar"
-                      type="password"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      autoComplete="new-password"
-                      minLength={6}
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground">Use pelo menos 6 caracteres.</p>
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Criando conta..." : "Criar conta"}
-                  </Button>
-                </form>
+                ) : (
+                  <form
+                    className="space-y-4"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void signUp();
+                    }}
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="nome-criar">Seu nome</Label>
+                      <Input
+                        id="nome-criar"
+                        value={fullName}
+                        onChange={(event) => setFullName(event.target.value)}
+                        autoComplete="name"
+                        placeholder="Ex.: Dra. Camila Ribeiro"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email-criar">E-mail</Label>
+                      <Input
+                        id="email-criar"
+                        type="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        autoComplete="email"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="senha-criar">Senha</Label>
+                      <Input
+                        id="senha-criar"
+                        type="password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        autoComplete="new-password"
+                        minLength={6}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">Use pelo menos 6 caracteres.</p>
+                    </div>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? "Criando conta..." : "Criar conta"}
+                    </Button>
+                  </form>
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>

@@ -11,47 +11,38 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useClinicContext } from "@/hooks/use-clinic-context";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  fetchMembers,
-  fetchProcedures,
-  isManager,
-  ROLE_LABELS,
-  type AppRole,
-} from "@/lib/clinic-data";
+import { fetchClinicTeam, isManager, ROLE_LABELS } from "@/lib/clinic-data";
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   component: ConfiguracoesPage,
 });
 
-function formatCurrency(value: number | null) {
-  if (value == null) return "—";
-  return Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
 function ConfiguracoesPage() {
   const { data: context } = useClinicContext();
   const queryClient = useQueryClient();
-  const manager = isManager(context?.roles ?? []);
+  const manager = isManager(context?.activeRole ?? null);
+  const clinicId = context?.activeClinic?.id;
 
   const [clinicName, setClinicName] = useState("");
   const [fullName, setFullName] = useState("");
 
   useEffect(() => {
-    setClinicName(context?.clinic?.name ?? "");
+    setClinicName(context?.activeClinic?.name ?? "");
     setFullName(context?.profile?.full_name ?? "");
-  }, [context?.clinic?.name, context?.profile?.full_name]);
+  }, [context?.activeClinic?.name, context?.profile?.full_name]);
 
-  const members = useQuery({ queryKey: ["members"], queryFn: fetchMembers });
-  const procedures = useQuery({ queryKey: ["procedures"], queryFn: fetchProcedures });
+  const team = useQuery({
+    queryKey: ["clinic-team", clinicId],
+    queryFn: () => fetchClinicTeam(clinicId!),
+    enabled: Boolean(clinicId),
+  });
 
   const saveClinic = useMutation({
     mutationFn: async () => {
       const name = clinicName.trim();
       if (!name) throw new Error("Informe o nome da clínica.");
-      const { error } = await supabase
-        .from("clinics")
-        .update({ name })
-        .eq("id", context!.clinic!.id);
+      if (!clinicId) throw new Error("Nenhuma clínica ativa.");
+      const { error } = await supabase.from("clinics").update({ name }).eq("id", clinicId);
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
@@ -74,7 +65,7 @@ function ConfiguracoesPage() {
     onSuccess: () => {
       toast.success("Seu nome foi atualizado.");
       void queryClient.invalidateQueries({ queryKey: ["clinic-context"] });
-      void queryClient.invalidateQueries({ queryKey: ["members"] });
+      void queryClient.invalidateQueries({ queryKey: ["clinic-team"] });
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -84,7 +75,7 @@ function ConfiguracoesPage() {
       <header>
         <h1 className="font-display text-3xl font-semibold">Configurações</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Dados da clínica, sua conta e o que já está cadastrado.
+          Dados da clínica, sua conta e a equipe.
         </p>
       </header>
 
@@ -92,9 +83,7 @@ function ConfiguracoesPage() {
         <CardHeader>
           <CardTitle className="text-base">Sua clínica</CardTitle>
           <CardDescription>
-            {manager
-              ? "Só administradores e gestores podem alterar estes dados."
-              : "Apenas administradores e gestores podem alterar estes dados."}
+            Apenas administradores e gestores podem alterar estes dados.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -130,11 +119,11 @@ function ConfiguracoesPage() {
             />
           </div>
           <div className="flex flex-wrap gap-2">
-            {(context?.roles ?? []).map((role: AppRole) => (
-              <Badge key={role} variant="secondary">
-                {ROLE_LABELS[role]}
-              </Badge>
-            ))}
+            {context?.activeRole ? (
+              <Badge variant="secondary">{ROLE_LABELS[context.activeRole]}</Badge>
+            ) : (
+              <Badge variant="outline">Sem papel</Badge>
+            )}
           </div>
           <Button
             variant="outline"
@@ -149,65 +138,30 @@ function ConfiguracoesPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Equipe</CardTitle>
-          <CardDescription>Pessoas com acesso a esta clínica.</CardDescription>
+          <CardDescription>Pessoas com vínculo nesta clínica.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
-          {members.isPending ? (
+          {team.isPending ? (
             <Skeleton className="h-12" />
           ) : (
-            (members.data ?? []).map((member) => (
+            (team.data ?? []).map((member) => (
               <div
                 key={member.id}
                 className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2"
               >
-                <p className="truncate text-sm font-medium">{member.full_name || "Sem nome"}</p>
+                <p className="truncate text-sm font-medium">
+                  {member.profile?.full_name || member.profile?.email || "Sem nome"}
+                </p>
                 <div className="flex flex-wrap justify-end gap-1">
-                  {member.roles.length === 0 ? (
-                    <Badge variant="outline">Sem papel</Badge>
-                  ) : (
-                    member.roles.map((role) => (
-                      <Badge key={role} variant="secondary">
-                        {ROLE_LABELS[role]}
-                      </Badge>
-                    ))
-                  )}
+                  <Badge variant="secondary">{ROLE_LABELS[member.role]}</Badge>
+                  {!member.is_active && <Badge variant="outline">Inativo</Badge>}
                 </div>
               </div>
             ))
           )}
           <p className="pt-1 text-xs text-muted-foreground">
-            Convites por e-mail e troca de papéis entram na próxima fase.
+            Convites por e-mail e troca de papéis entram em uma fase futura.
           </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Procedimentos</CardTitle>
-          <CardDescription>Serviços cadastrados na sua clínica.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {procedures.isPending ? (
-            <Skeleton className="h-12" />
-          ) : (procedures.data ?? []).length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum procedimento cadastrado ainda.</p>
-          ) : (
-            (procedures.data ?? []).map((procedure) => (
-              <div
-                key={procedure.id}
-                className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{procedure.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatCurrency(procedure.default_price)}
-                    {procedure.duration_minutes ? ` · ${procedure.duration_minutes} min` : ""}
-                  </p>
-                </div>
-                {!procedure.is_active && <Badge variant="outline">Inativo</Badge>}
-              </div>
-            ))
-          )}
         </CardContent>
       </Card>
     </div>
