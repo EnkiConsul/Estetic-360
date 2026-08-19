@@ -18,6 +18,7 @@ import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/cr
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
 import { Route as AuthenticatedPacientesRouteImport } from './routes/_authenticated/pacientes'
+import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +65,11 @@ const AuthenticatedPacientesRoute = AuthenticatedPacientesRouteImport.update({
   path: '/pacientes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/pacientes': typeof AuthenticatedPacientesRoute
+  '/relatorios': typeof AuthenticatedRelatoriosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/pacientes': typeof AuthenticatedPacientesRoute
+  '/relatorios': typeof AuthenticatedRelatoriosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
   '/_authenticated/pacientes': typeof AuthenticatedPacientesRoute
+  '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/inicio'
     | '/pacientes'
+    | '/relatorios'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/inicio'
     | '/pacientes'
+    | '/relatorios'
   id:
     | '__root__'
     | '/'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/_authenticated/financeiro'
     | '/_authenticated/inicio'
     | '/_authenticated/pacientes'
+    | '/_authenticated/relatorios'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -202,6 +214,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPacientesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/relatorios': {
+      id: '/_authenticated/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -212,6 +231,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
   AuthenticatedPacientesRoute: typeof AuthenticatedPacientesRoute
+  AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -221,6 +241,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
   AuthenticatedPacientesRoute: AuthenticatedPacientesRoute,
+  AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
