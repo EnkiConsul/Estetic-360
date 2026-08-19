@@ -93,11 +93,24 @@ export async function createClinicWithAdmin(clinicName: string, fullName: string
 
 /** Equipe da clínica ativa, sempre derivada de clinic_members. */
 export async function fetchClinicTeam(clinicId: string) {
-  const { data, error } = await supabase
+  const { data: members, error } = await supabase
     .from("clinic_members")
-    .select("id, role, is_active, user_id, profile:profiles(id, full_name, email)")
+    .select("id, role, is_active, user_id")
     .eq("clinic_id", clinicId)
     .order("created_at");
   if (error) throw new Error(error.message);
-  return data ?? [];
+
+  const ids = (members ?? []).map((m) => m.user_id);
+  if (ids.length === 0) return [];
+
+  const { data: profiles, error: profilesError } = await supabase
+    .from("profiles")
+    .select("id, full_name, email")
+    .in("id", ids);
+  if (profilesError) throw new Error(profilesError.message);
+
+  return (members ?? []).map((member) => ({
+    ...member,
+    profile: (profiles ?? []).find((p) => p.id === member.user_id) ?? null,
+  }));
 }

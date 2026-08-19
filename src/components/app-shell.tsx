@@ -62,7 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     );
   }
 
-  if (data && !data.profile) {
+  if (data && data.memberships.length === 0) {
     return <ClinicSetup />;
   }
 
@@ -99,7 +99,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mt-6 flex-1">{nav}</div>
         <UserBox
           name={data?.profile?.full_name || data?.email || ""}
-          role={data?.roles.map((r) => ROLE_LABELS[r]).join(" · ") || "Sem papel"}
+          role={data?.activeRole ? ROLE_LABELS[data.activeRole] : "Sem papel"}
           onSignOut={handleSignOut}
         />
       </aside>
@@ -117,7 +117,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Menu className="h-5 w-5" />
             </Button>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">{data?.clinic?.name}</p>
+              <p className="truncate text-sm font-semibold">{data?.activeClinic?.name}</p>
               <p className="text-xs text-muted-foreground">Estetic360º</p>
             </div>
           </div>
