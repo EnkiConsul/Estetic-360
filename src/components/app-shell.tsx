@@ -121,12 +121,19 @@ export function AppShell({ children }: { children: ReactNode }) {
               <p className="text-xs text-muted-foreground">Estetic360º</p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleSignOut} className="hidden lg:inline-flex">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSignOut}
+            className="hidden lg:inline-flex"
+          >
             <LogOut className="mr-2 h-4 w-4" /> Sair
           </Button>
         </header>
 
-        <div className={cn("border-b border-border bg-sidebar p-4 lg:hidden", !mobileOpen && "hidden")}>
+        <div
+          className={cn("border-b border-border bg-sidebar p-4 lg:hidden", !mobileOpen && "hidden")}
+        >
           {nav}
           <Button variant="outline" size="sm" className="mt-3 w-full" onClick={handleSignOut}>
             <LogOut className="mr-2 h-4 w-4" /> Sair
@@ -153,20 +160,17 @@ function Brand() {
   );
 }
 
-function UserBox({
-  name,
-  role,
-  onSignOut,
-}: {
-  name: string;
-  role: string;
-  onSignOut: () => void;
-}) {
+function UserBox({ name, role, onSignOut }: { name: string; role: string; onSignOut: () => void }) {
   return (
     <div className="mt-4 rounded-lg border border-sidebar-border bg-card p-3">
       <p className="truncate text-sm font-medium">{name}</p>
       <p className="truncate text-xs text-muted-foreground">{role}</p>
-      <Button variant="ghost" size="sm" className="mt-2 w-full justify-start px-0" onClick={onSignOut}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="mt-2 w-full justify-start px-0"
+        onClick={onSignOut}
+      >
         <LogOut className="mr-2 h-4 w-4" /> Sair
       </Button>
     </div>

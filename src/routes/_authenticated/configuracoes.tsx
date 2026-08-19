@@ -74,7 +74,9 @@ function ConfiguracoesPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <header>
         <h1 className="font-display text-3xl font-semibold">Configurações</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Dados da clínica, sua conta e a equipe.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Dados da clínica, sua conta e a equipe.
+        </p>
       </header>
 
       <Card>

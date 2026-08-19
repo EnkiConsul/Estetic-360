@@ -104,7 +104,9 @@ function AuthPage() {
         <Card>
           <CardHeader>
             <CardTitle>Acesse sua clínica</CardTitle>
-            <CardDescription>Use seu e-mail e senha para entrar ou criar sua conta.</CardDescription>
+            <CardDescription>
+              Use seu e-mail e senha para entrar ou criar sua conta.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="entrar">
@@ -162,51 +164,51 @@ function AuthPage() {
                     </p>
                   </div>
                 ) : (
-                <form
-                  className="space-y-4"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    void signUp();
-                  }}
-                >
-                  <div className="space-y-2">
-                    <Label htmlFor="nome-criar">Seu nome</Label>
-                    <Input
-                      id="nome-criar"
-                      value={fullName}
-                      onChange={(event) => setFullName(event.target.value)}
-                      autoComplete="name"
-                      placeholder="Ex.: Dra. Camila Ribeiro"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email-criar">E-mail</Label>
-                    <Input
-                      id="email-criar"
-                      type="email"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                      autoComplete="email"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="senha-criar">Senha</Label>
-                    <Input
-                      id="senha-criar"
-                      type="password"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      autoComplete="new-password"
-                      minLength={6}
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground">Use pelo menos 6 caracteres.</p>
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Criando conta..." : "Criar conta"}
-                  </Button>
-                </form>
+                  <form
+                    className="space-y-4"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void signUp();
+                    }}
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="nome-criar">Seu nome</Label>
+                      <Input
+                        id="nome-criar"
+                        value={fullName}
+                        onChange={(event) => setFullName(event.target.value)}
+                        autoComplete="name"
+                        placeholder="Ex.: Dra. Camila Ribeiro"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email-criar">E-mail</Label>
+                      <Input
+                        id="email-criar"
+                        type="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        autoComplete="email"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="senha-criar">Senha</Label>
+                      <Input
+                        id="senha-criar"
+                        type="password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        autoComplete="new-password"
+                        minLength={6}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">Use pelo menos 6 caracteres.</p>
+                    </div>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? "Criando conta..." : "Criar conta"}
+                    </Button>
+                  </form>
                 )}
               </TabsContent>
             </Tabs>
