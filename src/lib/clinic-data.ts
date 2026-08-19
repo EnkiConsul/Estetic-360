@@ -267,11 +267,11 @@ export async function registerContact(params: {
   });
   if (activityError) throw new Error(activityError.message);
 
-  const patch: Record<string, unknown> = {
+  const patch: Database["public"]["Tables"]["leads"]["Update"] = {
     last_contact_at: new Date().toISOString(),
     next_followup_at: nextFollowupAt,
+    ...(status ? { status } : {}),
   };
-  if (status) patch.status = status;
 
   const { error } = await supabase.from("leads").update(patch).eq("id", lead.id);
   if (error) throw new Error(error.message);
@@ -279,9 +279,11 @@ export async function registerContact(params: {
 
 export async function changeLeadStatus(lead: Lead, status: string, lossReason?: string | null) {
   const userId = (await supabase.auth.getUser()).data.user?.id ?? null;
-  const patch: Record<string, unknown> = { status };
-  if (status === "perdido") patch.loss_reason = lossReason ?? null;
-  if (status === "perdido" || status === "convertido") patch.next_followup_at = null;
+  const patch: Database["public"]["Tables"]["leads"]["Update"] = {
+    status,
+    ...(status === "perdido" ? { loss_reason: lossReason ?? null } : {}),
+    ...(status === "perdido" || status === "convertido" ? { next_followup_at: null } : {}),
+  };
 
   const { error } = await supabase.from("leads").update(patch).eq("id", lead.id);
   if (error) throw new Error(error.message);
