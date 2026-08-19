@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -8,12 +8,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { clinicContextKey } from "@/hooks/use-clinic-context";
+import { supabase } from "@/integrations/supabase/client";
 import { createClinicWithAdmin } from "@/lib/clinic-data";
 
 export function ClinicSetup({ defaultName }: { defaultName?: string }) {
   const [clinicName, setClinicName] = useState("");
   const [fullName, setFullName] = useState(defaultName ?? "");
   const queryClient = useQueryClient();
+
+  // Pré-preenche com o nome informado no cadastro (metadados do usuário).
+  useEffect(() => {
+    if (defaultName) return;
+    void supabase.auth.getUser().then(({ data }) => {
+      const metaName = (data.user?.user_metadata as { full_name?: string } | undefined)?.full_name;
+      if (metaName) setFullName((current) => current || metaName);
+    });
+  }, [defaultName]);
 
   const mutation = useMutation({
     mutationFn: () => createClinicWithAdmin(clinicName.trim(), fullName.trim()),
