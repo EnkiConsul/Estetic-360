@@ -152,3 +152,153 @@ export async function fetchDashboard(): Promise<DashboardData> {
     procedureCount: procedures.count ?? 0,
   };
 }
+
+/* ===================== CRM: leads ===================== */
+
+export type LeadActivity = Database["public"]["Tables"]["lead_activities"]["Row"];
+
+export const LEAD_STATUS_ORDER = [
+  "novo",
+  "em_contato",
+  "interessado",
+  "avaliacao_agendada",
+  "avaliacao_realizada",
+  "proposta",
+  "convertido",
+  "perdido",
+] as const;
+
+export type LeadStatus = (typeof LEAD_STATUS_ORDER)[number];
+
+export const ACTIVITY_KIND_LABELS: Record<string, string> = {
+  ligacao: "Ligação",
+  whatsapp: "WhatsApp",
+  email: "E-mail",
+  mensagem: "Mensagem",
+  visita: "Visita",
+  nota: "Anotação",
+  status: "Mudança de etapa",
+  conversao: "Conversão",
+};
+
+export const LEAD_SOURCES = [
+  "Instagram",
+  "Facebook",
+  "Google",
+  "WhatsApp",
+  "Indicação",
+  "Passando na rua",
+  "Outro",
+] as const;
+
+export type LeadInput = {
+  name: string;
+  phone: string | null;
+  email: string | null;
+  interest: string | null;
+  source: string | null;
+  campaign: string | null;
+  status: string;
+  next_followup_at: string | null;
+  owner_id: string | null;
+};
+
+export async function fetchLeads() {
+  const { data, error } = await supabase
+    .from("leads")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+/** clinic_id nunca vem do formulário: é derivado do perfil do usuário autenticado. */
+export async function createLead(input: LeadInput) {
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("clinic_id")
+    .eq("id", (await supabase.auth.getUser()).data.user?.id ?? "")
+    .maybeSingle();
+  if (profileError) throw new Error(profileError.message);
+  if (!profile) throw new Error("Perfil não encontrado. Configure sua clínica primeiro.");
+
+  const { data, error } = await supabase
+    .from("leads")
+    .insert({ ...input, clinic_id: profile.clinic_id })
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function updateLead(id: string, input: Partial<LeadInput> & { loss_reason?: string | null; last_contact_at?: string | null }) {
+  const { data, error } = await supabase.from("leads").update(input).eq("id", id).select("*").single();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function fetchLeadActivities(leadId: string) {
+  const { data, error } = await supabase
+    .from("lead_activities")
+    .select("*")
+    .eq("lead_id", leadId)
+    .order("happened_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+/** Registra um contato e atualiza último contato / próximo follow-up do lead. */
+export async function registerContact(params: {
+  lead: Lead;
+  kind: string;
+  note: string | null;
+  nextFollowupAt: string | null;
+  status?: string;
+}) {
+  const { lead, kind, note, nextFollowupAt, status } = params;
+  const userId = (await supabase.auth.getUser()).data.user?.id ?? null;
+
+  const { error: activityError } = await supabase.from("lead_activities").insert({
+    clinic_id: lead.clinic_id,
+    lead_id: lead.id,
+    kind,
+    note,
+    created_by: userId,
+  });
+  if (activityError) throw new Error(activityError.message);
+
+  const patch: Record<string, unknown> = {
+    last_contact_at: new Date().toISOString(),
+    next_followup_at: nextFollowupAt,
+  };
+  if (status) patch.status = status;
+
+  const { error } = await supabase.from("leads").update(patch).eq("id", lead.id);
+  if (error) throw new Error(error.message);
+}
+
+export async function changeLeadStatus(lead: Lead, status: string, lossReason?: string | null) {
+  const userId = (await supabase.auth.getUser()).data.user?.id ?? null;
+  const patch: Record<string, unknown> = { status };
+  if (status === "perdido") patch.loss_reason = lossReason ?? null;
+  if (status === "perdido" || status === "convertido") patch.next_followup_at = null;
+
+  const { error } = await supabase.from("leads").update(patch).eq("id", lead.id);
+  if (error) throw new Error(error.message);
+
+  await supabase.from("lead_activities").insert({
+    clinic_id: lead.clinic_id,
+    lead_id: lead.id,
+    kind: "status",
+    note: `Etapa alterada para ${LEAD_STATUS_LABELS[status] ?? status}${
+      status === "perdido" && lossReason ? ` — motivo: ${lossReason}` : ""
+    }.`,
+    created_by: userId,
+  });
+}
+
+export async function convertLeadToPatient(leadId: string) {
+  const { data, error } = await supabase.rpc("convert_lead_to_patient", { p_lead_id: leadId });
+  if (error) throw new Error(error.message);
+  return data;
+}

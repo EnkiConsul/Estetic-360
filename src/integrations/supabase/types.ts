@@ -53,6 +53,61 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_activities: {
+        Row: {
+          clinic_id: string
+          created_at: string
+          created_by: string | null
+          happened_at: string
+          id: string
+          kind: string
+          lead_id: string
+          note: string | null
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string
+          created_by?: string | null
+          happened_at?: string
+          id?: string
+          kind?: string
+          lead_id: string
+          note?: string | null
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string
+          created_by?: string | null
+          happened_at?: string
+          id?: string
+          kind?: string
+          lead_id?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_activities_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_activities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           campaign: string | null
@@ -314,6 +369,7 @@ export type Database = {
         Args: { p_clinic_name: string; p_full_name: string }
         Returns: string
       }
+      convert_lead_to_patient: { Args: { p_lead_id: string }; Returns: string }
       current_clinic_id: { Args: never; Returns: string }
       has_role: {
         Args: {
