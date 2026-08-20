@@ -1,23 +1,35 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { CalendarDays, ClipboardList, Contact, Sparkles, Users, Wallet } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { AlertTriangle, CalendarClock, CheckCircle2, PhoneOff } from "lucide-react";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useClinicContext } from "@/hooks/use-clinic-context";
+import { useCrmPendings } from "@/hooks/use-crm";
+import { formatDateTime, type Lead } from "@/lib/crm-data";
 
 export const Route = createFileRoute("/_authenticated/inicio")({
+  head: () => ({
+    meta: [
+      { title: "Central de ações | Estetic360º" },
+      {
+        name: "description",
+        content:
+          "Veja em um só lugar os leads sem primeiro contato e os follow-ups vencidos da sua clínica de estética.",
+      },
+      { property: "og:title", content: "Central de ações | Estetic360º" },
+      {
+        property: "og:description",
+        content: "As pendências que precisam da sua atenção hoje, em uma única tela.",
+      },
+    ],
+  }),
   component: InicioPage,
 });
 
-const UPCOMING = [
-  { title: "CRM e leads", text: "Captação e acompanhamento até virar paciente.", icon: Contact },
-  { title: "Pacientes 360º", text: "Histórico completo em uma única tela.", icon: Users },
-  { title: "Agenda", text: "Avaliações, sessões e retornos.", icon: CalendarDays },
-  { title: "Atendimentos", text: "Protocolos, sessões e evolução.", icon: ClipboardList },
-  { title: "Financeiro", text: "Vendas, recebimentos e parcelas.", icon: Wallet },
-] as const;
-
 function InicioPage() {
   const { data: context } = useClinicContext();
+  const clinicId = context?.activeClinic?.id;
+  const pendings = useCrmPendings(clinicId);
   const firstName = (context?.profile?.full_name || "").split(" ")[0];
 
   return (
@@ -28,37 +40,101 @@ function InicioPage() {
           {firstName ? `Olá, ${firstName}` : "Olá"}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Sua clínica está criada e o acesso está configurado. Os módulos de operação serão
-          liberados nas próximas fases.
+          Central de ações: o que precisa da sua atenção agora.
         </p>
       </header>
 
-      <Card className="border-dashed">
-        <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <Sparkles className="h-5 w-5 text-primary" />
-          </div>
-          <p className="font-medium">Central de ações vazia</p>
-          <p className="max-w-md text-sm text-muted-foreground">
-            Quando os módulos entrarem no ar, as pendências que precisam da sua atenção aparecem
-            aqui: primeiros contatos, retornos, sessões e parcelas.
-          </p>
-        </CardContent>
-      </Card>
-
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {UPCOMING.map((item) => (
-          <Card key={item.title} className="border-dashed">
-            <CardContent className="space-y-1 py-5">
-              <div className="flex items-center gap-2">
-                <item.icon className="h-4 w-4 text-muted-foreground" />
-                <p className="text-sm font-medium">{item.title}</p>
-              </div>
-              <p className="text-xs text-muted-foreground">{item.text}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </section>
+      {pendings.isPending ? (
+        <div className="space-y-4">
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+        </div>
+      ) : pendings.error ? (
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            Não conseguimos carregar suas pendências. Tente novamente.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <PendingCard
+            title="Leads sem primeiro contato"
+            icon={PhoneOff}
+            leads={pendings.data?.withoutContact ?? []}
+            to="sem_contato"
+          />
+          <PendingCard
+            title="Follow-ups vencidos"
+            icon={AlertTriangle}
+            leads={pendings.data?.overdue ?? []}
+            to="followup_vencido"
+          />
+          <PendingCard
+            title="Follow-ups de hoje"
+            icon={CalendarClock}
+            leads={pendings.data?.today ?? []}
+          />
+        </div>
+      )}
     </div>
+  );
+}
+
+function PendingCard({
+  title,
+  icon: Icon,
+  leads,
+  to,
+}: {
+  title: string;
+  icon: typeof PhoneOff;
+  leads: Lead[];
+  to?: "sem_contato" | "followup_vencido";
+}) {
+  return (
+    <Card>
+      <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Icon className="h-4 w-4 text-muted-foreground" />
+          {title}
+        </CardTitle>
+        <span className="text-sm font-semibold">{leads.length}</span>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {leads.length === 0 ? (
+          <p className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+            <CheckCircle2 className="h-4 w-4" /> Tudo em dia por aqui.
+          </p>
+        ) : (
+          <>
+            <ul className="space-y-2">
+              {leads.slice(0, 5).map((lead) => (
+                <li
+                  key={lead.id}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border p-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{lead.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {lead.interest || lead.phone || lead.email || "Sem detalhes"}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {formatDateTime(lead.next_followup_at)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <Link
+              to="/crm"
+              search={to ? { pendencia: to } : {}}
+              className="inline-block text-sm font-medium text-primary hover:underline"
+            >
+              Ver no CRM
+            </Link>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
