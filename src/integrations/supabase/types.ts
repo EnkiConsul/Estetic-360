@@ -303,10 +303,10 @@ export type Database = {
           },
           {
             foreignKeyName: "patients_origin_lead_fk"
-            columns: ["origin_lead_id", "clinic_id"]
+            columns: ["origin_lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
-            referencedColumns: ["id", "clinic_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
